@@ -75,7 +75,7 @@ runPseudotimeDE <- function(gene.vec,
     cur_res <- tryCatch(expr = pseudotimeDE(gene = x,
                                             ori.tbl = ori.tbl,
                                             sub.tbl = sub.tbl,
-                                            mat = mat[x,],
+                                            mat = mat,
                                             model = model,
                                             assay.use = assay.use,
                                             seurat.assay = seurat.assay) |>

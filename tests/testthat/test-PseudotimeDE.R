@@ -164,3 +164,57 @@ test_that("We can change parameters", {
   
   
 })
+
+
+test_that("We can change spline basis", {
+  data("LPS_sce")
+  data("LPS_ori_tbl")
+  data("LPS_sub_tbl")
+  
+  res_cr <- PseudotimeDE::pseudotimeDE(gene = "CCL5",
+                                       ori.tbl = LPS_ori_tbl,
+                                       sub.tbl = LPS_sub_tbl[1:100],
+                                       mat = LPS_sce,
+                                       model = "nb")
+  
+  expect_identical(as.character(formula(res_cr$gam.fit))[[3]],
+                   's(pseudotime, k = 6, bs = "cr")')
+  
+  res_cs <- PseudotimeDE::pseudotimeDE(gene = "CCL5",
+                                       ori.tbl = LPS_ori_tbl,
+                                       sub.tbl = LPS_sub_tbl[1:100],
+                                       mat = LPS_sce,
+                                       model = "nb",
+                                       bs = "cs")
+  
+  expect_identical(as.character(formula(res_cs$gam.fit))[[3]],
+                   's(pseudotime, k = 6, bs = "cs")')
+  
+  
+  
+  res_run_cr <- PseudotimeDE::runPseudotimeDE(gene.vec = c("CCL5", "CXCL10", "JustAJoke"),
+                                              ori.tbl = LPS_ori_tbl,
+                                              sub.tbl = LPS_sub_tbl[1:100],
+                                              mat = LPS_sce,
+                                              model = "auto",
+                                              mc.cores = 1)
+  
+  expect_identical(as.character(formula(res_run_cr$gam.fit[[1]]))[[3]],
+                   's(pseudotime, k = 6, bs = "cr")')
+  
+  
+  res_run_cs <- PseudotimeDE::runPseudotimeDE(gene.vec = c("CCL5", "CXCL10", "JustAJoke"),
+                                              ori.tbl = LPS_ori_tbl,
+                                              sub.tbl = LPS_sub_tbl[1:100],
+                                              mat = LPS_sce,
+                                              model = "auto",
+                                              bs = "cs",
+                                              mc.cores = 1)
+  
+  expect_identical(as.character(formula(res_run_cs$gam.fit[[1]]))[[3]],
+                   's(pseudotime, k = 6, bs = "cs")')
+  
+  
+})
+
+

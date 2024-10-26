@@ -88,7 +88,7 @@ runPseudotimeDE <- function(gene.vec,
                                             usebam = usebam,
                                             assay.use = assay.use,
                                             seurat.assay = seurat.assay) |>
-        append(setNames("NA_character_", "notes")), #input only the target gene
+        append(stats::setNames("NA_character_", "notes")), #input only the target gene
                         error = function(e) {
                           list(fix.pv = NA,
                                emp.pv = NA,

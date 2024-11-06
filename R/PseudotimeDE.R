@@ -50,7 +50,7 @@ pseudotimeDE <- function(gene,
                          sub.tbl,
                          mat,
                          assay.use = "counts",
-                         model = c("nb", "zinb", "gaussian" ,"auto", "qgam"),
+                         model = c("nb", "zinb", "gaussian" ,"auto", "qgam", "binomial"),
                          k = 6,
                          knots = c(0:5/5),
                          fix.weight = TRUE,
@@ -127,6 +127,12 @@ pseudotimeDE <- function(gene,
     count.v <- expv
   }
 
+  # if binomial, we need binary values
+  if(model == "binomial"){
+    expv <- expv > 0
+    count.v <- expv
+  }
+  
   dat <- cbind(pseudotime, expv) %>% tibble::as_tibble()
 
   #if(assay.use == "logcounts"){ ## We remove the special setting of counts since the assay name can be arbitrary from users
@@ -213,6 +219,14 @@ pseudotimeDE <- function(gene,
     zinf <- FALSE
     aic <- aic.qgam
   }
+  else if (model == "binomial"){
+    fit <- fit_gam(dat, distribution = "binomial", use_weights = FALSE, k = k, knots = knots, usebam = usebam, fit.formula = fit.formula)
+    if(identical(fit, FALSE)) stop("Fit failed")
+    
+    zinf <- FALSE
+    distri <- "binomial"
+    aic <- stats::AIC(fit)
+  }
   else {stop("Specified 'method=' parameter is invalid. Must be one of 'nb', 'zinb', 'gaussian' ,'auto', 'qgam'.")}
 
 
@@ -270,6 +284,13 @@ pseudotimeDE <- function(gene,
     expv <- mat[gene, ]
     count.v <- expv
   }
+  
+  # if binomial, we need binary values
+  if(model == "binomial"){
+    expv <- expv > 0
+    count.v <- expv
+  }
+  
   ## Use weights
 
   if(fix.weight && zinf) {
@@ -395,6 +416,12 @@ fit_gam <- function(dat, nthreads = 1, distribution, use_weights, knots, k, useb
                            knots = list(pseudotime = knots), control = list(nthreads = nthreads), weights = cellWeights)
         }
       }
+    }
+    else if(distribution == "binomial"){
+      fit <- mgcv::gam(fit.formula, family = "binomial",
+                       data = dat,
+                       knots = list(pseudotime = knots), control = list(nthreads = nthreads))
+      
     }
     else{stop("Specified 'distribution=' parameter is invalid. Must be one of 'nb', 'zinb', 'gaussian'.")}
     return(fit)

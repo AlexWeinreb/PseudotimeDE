@@ -373,3 +373,104 @@ test_that("We can use adaptive smoothing in PseudotimeDE", {
 })
 
 
+
+test_that("Family binomial works", {
+  data("LPS_sce")
+  data("LPS_ori_tbl")
+  data("LPS_sub_tbl")
+  
+  
+  # just pseudotimeDE
+  
+  res_nb <- PseudotimeDE::pseudotimeDE(gene = "CCL5",
+                                       ori.tbl = LPS_ori_tbl,
+                                       sub.tbl = LPS_sub_tbl[1:100],
+                                       mat = LPS_sce,
+                                       model = "nb")
+  
+  expect_identical(as.character(formula(res_nb$gam.fit))[[3]],
+                   's(pseudotime, k = 6, bs = "cr")')
+  
+  expect_match(family(res_nb$gam.fit)$family,
+               "Negative Binomial\\([0-9.]+\\)")
+  
+  
+  
+  res_bin <- PseudotimeDE::pseudotimeDE(gene = "CCL5",
+                                        ori.tbl = LPS_ori_tbl,
+                                        sub.tbl = LPS_sub_tbl[1:100],
+                                        mat = LPS_sce,
+                                        model = "binomial")
+  
+  expect_identical(as.character(formula(res_bin$gam.fit))[[3]],
+                   's(pseudotime, k = 6, bs = "cr")')
+  
+  expect_identical(family(res_bin$gam.fit)$family,
+                   "binomial")
+  
+  
+  expect_identical(res_nb$expv.zero,
+                   res_bin$expv.zero)
+  
+  
+  
+  
+  
+  
+  
+  
+  # test in runPseudotimeDE
+  
+  res_run_nb <- PseudotimeDE::runPseudotimeDE(gene.vec = c("CCL5", "CXCL10", "JustAJoke"),
+                                              ori.tbl = LPS_ori_tbl,
+                                              sub.tbl = LPS_sub_tbl[1:100],
+                                              mat = LPS_sce,
+                                              model = "nb",
+                                              mc.cores = 1)
+  
+  expect_equal(dim(res_run_nb)[1], 3)
+  expect_false( any(is.na(res_run_nb$test.statistics[1:2])) )
+  expect_true( is.na(res_run_nb$test.statistics[[3]]) )
+  expect_contains(class( res_run_nb$notes[[3]] ),
+                  "error")
+  
+  
+  res_run_bin <- PseudotimeDE::runPseudotimeDE(gene.vec = c("CCL5", "CXCL10", "JustAJoke"),
+                                              ori.tbl = LPS_ori_tbl,
+                                              sub.tbl = LPS_sub_tbl[1:100],
+                                              mat = LPS_sce,
+                                              model = "binomial",
+                                              mc.cores = 1)
+  
+  
+  expect_equal(dim(res_run_bin)[1], 3)
+  expect_false( any(is.na(res_run_bin$test.statistics[1:2])) )
+  expect_true( is.na(res_run_bin$test.statistics[[3]]) )
+  expect_contains(class( res_run_bin$notes[[3]] ),
+                  "error")
+  
+  expect_equal(res_run_nb$expv.zero,
+               res_run_bin$expv.zero)
+  
+  
+  # curves
+  
+  gg_nb <- PseudotimeDE::plotCurve(gene.vec = c("CCL5", "CXCL10"),
+                                  ori.tbl = LPS_ori_tbl,
+                                  mat = LPS_sce,
+                                  model.fit = res_run_nb$gam.fit[1:2])
+  expect_equal(class(gg_nb)[1], "gg")
+  
+  gg_bin <- PseudotimeDE::plotCurve(gene.vec = c("CCL5", "CXCL10"),
+                                  ori.tbl = LPS_ori_tbl,
+                                  mat = LPS_sce,
+                                  model.fit = res_run_bin$gam.fit[1:2])
+  expect_equal(class(gg_bin)[1], "gg")
+  
+  
+})
+
+
+
+
+

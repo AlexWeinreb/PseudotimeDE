@@ -67,6 +67,16 @@ plotCurve <- function(gene.vec,
       tidyr::pivot_longer(cols = gene.vec, names_to = "gene", values_to = "counts") %>%
       dplyr::select(gene, pseudotime, counts)
   }
+  
+  model.families <- sapply(model.fit, \(mod) family(mod)$family)
+  if(any(model.families == "binomial")){
+    
+    if( !all( model.families == "binomial" )){
+      stop("Use either only binomial models or none. Do not mix model families.")
+    }
+    
+    count_mat[["counts"]] <- 1L * (count_mat[["counts"]] > 0)
+  }
 
 
   dat <- base::mapply(X = gene.vec, Y = model.fit, function(X, Y) {
